@@ -1,11 +1,29 @@
-# file: k8s/web.yaml
+# file: gitops/k8s/web.yaml
+
+# ─── Resource 1: ConfigMap ─── wave 0
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-config
+  namespace: demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"    # wave 0: tạo TRƯỚC Deployment
+data:
+  MESSAGE: "hello from gitops"
+  VERSION: "v1.0"
+
+---
+
+# ─── Resource 2: Deployment ─── wave 1
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: web
   namespace: demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"    # wave 1: tạo SAU ConfigMap
 spec:
-  replicas: 4
+  replicas: 2
   selector:
     matchLabels:
       app: web
@@ -17,4 +35,23 @@ spec:
       containers:
       - name: web
         image: nginx:1.27
-        
+        envFrom:
+        - configMapRef:
+            name: web-config             # đọc ConfigMap (đã tạo ở wave 0)
+
+---
+
+# ─── Resource 3: Service ─── wave 2
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"    # wave 2: expose SAU KHI Deployment ready
+spec:
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 80

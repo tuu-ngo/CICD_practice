@@ -1,0 +1,7 @@
+# file: gitops/k8s/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"    # wave -1: chạy ĐẦU TIÊN

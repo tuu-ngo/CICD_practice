@@ -20,7 +20,5 @@ spec:
   ignoreDifferences:
   - group: argoproj.io
     kind: Application
-    jsonPointers:
-    - /status
-    - /metadata/annotations
-    - /metadata/finalizers
+    managedFieldsManagers:
+    - argocd-application-controller

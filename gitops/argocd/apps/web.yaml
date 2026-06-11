@@ -5,6 +5,7 @@ metadata:
   name: web
   namespace: argocd
 spec:
+  replicas: 4
   project: default                          # ← thêm dòng này
   source:
     repoURL: https://github.com/tuu-ngo/CICD_practice.git

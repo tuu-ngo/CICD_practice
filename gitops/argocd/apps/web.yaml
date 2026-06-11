@@ -5,14 +5,15 @@ metadata:
   name: web
   namespace: argocd
 spec:
+  project: default                          # ← thêm dòng này
   source:
     repoURL: https://github.com/tuu-ngo/CICD_practice.git
     targetRevision: main
-    path: gitops/k8s        # ← path trong repo (có prefix gitops/)
+    path: gitops/k8s
   destination:
     server: https://kubernetes.default.svc
     namespace: demo
   syncPolicy:
     automated:
-      prune: true           # xóa resource nếu xóa file khỏi Git
-      selfHeal: true        # tự sửa nếu ai kubectl edit tay
+      prune: true
+      selfHeal: true

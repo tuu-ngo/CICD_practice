@@ -24,6 +24,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"    # wave 1: tạo SAU ConfigMap
 spec:
   replicas: 2
+  invalidField: "this should not exist"    # ← field không hợp lệ theo schema
   selector:
     matchLabels:
       app: web

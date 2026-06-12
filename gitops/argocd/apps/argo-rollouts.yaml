@@ -23,3 +23,12 @@ spec:
     syncOptions:
     - CreateNamespace=true
     - ServerSideApply=true
+  ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    managedFieldsManagers:
+    - argocd-application-controller
+  - group: ""
+    kind: Service
+    managedFieldsManagers:
+    - argocd-application-controller

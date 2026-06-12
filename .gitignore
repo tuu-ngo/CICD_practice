@@ -1,0 +1,11 @@
+# Sensitive files — chứa credentials, không push lên Git
+gitops/k8s-api/alertmanager-secret.yaml
+
+# Binaries
+*.exe
+*.bin
+
+# Local files
+*.local
+.env
+.env.*

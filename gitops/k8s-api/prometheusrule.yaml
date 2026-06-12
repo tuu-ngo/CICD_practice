@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: api-slo
+  namespace: demo
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+  - name: api.slo
+    interval: 30s
+    rules:
+    - record: job:api_success_rate:rate2m
+      expr: |
+        sum(rate(flask_http_request_total{namespace="demo",status!~"5.."}[2m]))
+        /
+        sum(rate(flask_http_request_total{namespace="demo"}[2m]))
+
+    - alert: ApiSLOBreach
+      expr: job:api_success_rate:rate2m < 0.95
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "API success rate below SLO (95%)"
+        description: "Success rate {{ $value | humanizePercentage }} is below 95% SLO threshold."

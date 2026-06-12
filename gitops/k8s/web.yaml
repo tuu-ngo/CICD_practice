@@ -23,7 +23,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"    # wave 1: tạo SAU ConfigMap
 spec:
-  replicas: 2
+  replicas: 9
   selector:
     matchLabels:
       app: web

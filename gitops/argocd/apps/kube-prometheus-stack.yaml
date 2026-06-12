@@ -18,7 +18,23 @@ spec:
         grafana:
           adminPassword: admin123
         alertmanager:
-          enabled: true
+          config:
+            global:
+              smtp_smarthost: 'smtp.gmail.com:587'
+              smtp_from: 'minhnhatdesu00@gmail.com'      # ← email của bạn
+              smtp_auth_username: 'minhnhatdesu00@gmail.com'
+              smtp_auth_password: 'loefrrgonhzswila'  # ← App Password (16 ký tự, bỏ dấu cách)
+              smtp_require_tls: true
+            route:
+              receiver: 'email'
+              group_wait: 10s
+              group_interval: 1m
+              repeat_interval: 5m
+            receivers:
+            - name: 'email'
+              email_configs:
+              - to: 'minhnhatdesu00@gmail.com'            # ← email nhận alert
+                send_resolved: true
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

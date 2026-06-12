@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: api
+  namespace: demo
+  labels:
+    app: api
+spec:
+  selector:
+    matchLabels:
+      app: api          # match với label của Service
+  endpoints:
+  - port: http          # tên port trong Service (http: 8080)
+    path: /metrics      # endpoint metrics của Flask
+    interval: 15s 

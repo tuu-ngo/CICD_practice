@@ -1,0 +1,62 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: api
+  namespace: demo
+  labels:
+    app: api
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+      - name: api
+        image: w9-api:1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8080
+        env:
+        - name: ERROR_RATE
+          value: "0"          # 0 = không lỗi
+        - name: VERSION
+          value: "v1"
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+  strategy:
+    canary:
+      steps:
+      - setWeight: 25          # bước 1: 25% traffic sang bản mới
+      - pause: {}              # dừng vô hạn, chờ người promote
+      - setWeight: 50          # bước 2: 50%
+      - pause:
+          duration: 30s        # tự động sau 30 giây
+      - setWeight: 100         # bước 3: full 100%
+
+---
+
+# ─── Service ───
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: demo
+  labels:
+    app: api
+spec:
+  selector:
+    app: api
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080

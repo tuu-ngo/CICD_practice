@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: success-rate
+  namespace: demo
+spec:
+  metrics:
+  - name: success-rate
+    interval: 30s
+    count: 3                           # chạy 3 lần
+    successCondition: result[0] >= 0.95  # >= 95% thành công
+    failureLimit: 1                    # fail 1 lần → ABORT
+    provider:
+      prometheus:
+        address: http://kube-prometheus-stack-prometheus.monitoring:9090
+        query: |
+          sum(rate(flask_http_request_total{namespace="demo",status!~"5.."}[2m]))
+          /
+          sum(rate(flask_http_request_total{namespace="demo"}[2m]))

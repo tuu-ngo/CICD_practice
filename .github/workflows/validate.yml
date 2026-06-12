@@ -1,0 +1,24 @@
+# file: .github/workflows/validate.yml   
+name: validate
+
+on:
+  pull_request:
+    paths:
+      - "gitops/k8s/**"     # trigger khi có PR thay đổi file trong gitops/k8s/
+
+jobs:
+  validate:
+    name: Validate Kubernetes Manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install kubeconform
+        run: |
+          curl -sSLo kc.tgz \
+            https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz
+          tar -xzf kc.tgz
+          sudo mv kubeconform /usr/local/bin/
+
+      - name: Validate manifests
+        run: kubeconform -strict -summary -output pretty gitops/k8s/

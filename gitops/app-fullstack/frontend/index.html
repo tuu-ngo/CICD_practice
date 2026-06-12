@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GitOps Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  header .logo {
+    font-size: 2.8rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.03em;
+  }
+
+  header p {
+    color: #64748b;
+    margin-top: 6px;
+    font-size: 0.95rem;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(34,197,94,0.12);
+    border: 1px solid rgba(34,197,94,0.3);
+    color: #22c55e;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-top: 12px;
+  }
+
+  .badge.offline {
+    background: rgba(239,68,68,0.12);
+    border-color: rgba(239,68,68,0.3);
+    color: #ef4444;
+  }
+
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    width: 100%;
+    max-width: 860px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    padding: 24px 20px;
+    text-align: center;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+
+  .card:hover { transform: translateY(-3px); border-color: #475569; }
+
+  .card .value {
+    font-size: 2.2rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .card .label {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .card.accent .value { color: #f59e0b; }
+  .card.blue .value   { color: #60a5fa; }
+  .card.green .value  { color: #34d399; }
+  .card.purple .value { color: #a78bfa; }
+
+  .panel {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    padding: 24px 28px;
+    width: 100%;
+    max-width: 860px;
+    margin-bottom: 24px;
+  }
+
+  .panel h2 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #64748b;
+    margin-bottom: 16px;
+  }
+
+  .ping-btn {
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    border: none;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.88rem;
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    letter-spacing: 0.02em;
+  }
+
+  .ping-btn:hover { opacity: 0.85; }
+  .ping-btn:active { opacity: 0.7; }
+
+  .log {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    height: 140px;
+    overflow-y: auto;
+    margin-top: 14px;
+    line-height: 1.6;
+  }
+
+  .log .ok   { color: #34d399; }
+  .log .err  { color: #f87171; }
+  .log .time { color: #64748b; }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #334155;
+    font-size: 0.88rem;
+  }
+
+  .info-row:last-child { border-bottom: none; }
+  .info-row .key { color: #64748b; }
+  .info-row .val { font-weight: 600; font-family: monospace; color: #e2e8f0; }
+
+  footer {
+    margin-top: 16px;
+    color: #334155;
+    font-size: 0.75rem;
+    text-align: center;
+  }
+
+  #refresh-indicator {
+    font-size: 0.72rem;
+    color: #475569;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">GitOps Dashboard</div>
+  <p>Realtime status · powered by ArgoCD + Kubernetes</p>
+  <div class="badge" id="status-badge">
+    <span class="dot"></span>
+    <span id="badge-text">Connecting...</span>
+  </div>
+</header>
+
+<!-- Metric Cards -->
+<div class="grid">
+  <div class="card accent">
+    <div class="value" id="version">—</div>
+    <div class="label">Version</div>
+  </div>
+  <div class="card blue">
+    <div class="value" id="uptime">—</div>
+    <div class="label">Uptime</div>
+  </div>
+  <div class="card green">
+    <div class="value" id="requests">—</div>
+    <div class="label">Requests Served</div>
+  </div>
+  <div class="card purple">
+    <div class="value" id="env">—</div>
+    <div class="label">Environment</div>
+  </div>
+</div>
+
+<!-- Info Panel -->
+<div class="panel">
+  <h2>System Info</h2>
+  <div class="info-row">
+    <span class="key">API Endpoint</span>
+    <span class="val">/api/status</span>
+  </div>
+  <div class="info-row">
+    <span class="key">Namespace</span>
+    <span class="val">fullstack</span>
+  </div>
+  <div class="info-row">
+    <span class="key">Managed by</span>
+    <span class="val">ArgoCD (GitOps)</span>
+  </div>
+  <div class="info-row">
+    <span class="key">Last updated</span>
+    <span class="val" id="last-updated">—</span>
+  </div>
+</div>
+
+<!-- Ping Panel -->
+<div class="panel">
+  <h2>Ping Test</h2>
+  <button class="ping-btn" onclick="doPing()">Send Ping</button>
+  <div class="log" id="log">
+    <span class="time">[ready]</span> Click "Send Ping" to test backend...<br>
+  </div>
+</div>
+
+<div id="refresh-indicator">Auto-refresh every 5s</div>
+
+<footer>
+  W9 Lab · GitOps + Observability + Canary · tuu-ngo/CICD_practice
+</footer>
+
+<script>
+  const API = '/api';
+
+  async function fetchStatus() {
+    try {
+      const res = await fetch(`${API}/status`);
+      const data = await res.json();
+
+      document.getElementById('version').textContent = data.version;
+      document.getElementById('uptime').textContent = data.uptime;
+      document.getElementById('requests').textContent = data.requests_served.toLocaleString();
+      document.getElementById('env').textContent = data.environment;
+      document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+
+      const badge = document.getElementById('status-badge');
+      const text = document.getElementById('badge-text');
+      badge.className = 'badge';
+      text.textContent = 'Backend Online';
+    } catch (e) {
+      const badge = document.getElementById('status-badge');
+      const text = document.getElementById('badge-text');
+      badge.className = 'badge offline';
+      text.textContent = 'Backend Offline';
+    }
+  }
+
+  async function doPing() {
+    const log = document.getElementById('log');
+    const time = new Date().toLocaleTimeString();
+    try {
+      const t0 = performance.now();
+      const res = await fetch(`${API}/ping`);
+      const data = await res.json();
+      const ms = (performance.now() - t0).toFixed(1);
+      log.innerHTML += `<span class="time">[${time}]</span> <span class="ok">PONG</span> · ${data.message} · <span class="ok">${ms}ms</span><br>`;
+    } catch (e) {
+      log.innerHTML += `<span class="time">[${time}]</span> <span class="err">ERROR</span> · ${e.message}<br>`;
+    }
+    log.scrollTop = log.scrollHeight;
+  }
+
+  fetchStatus();
+  setInterval(fetchStatus, 5000);
+</script>
+</body>
+</html>

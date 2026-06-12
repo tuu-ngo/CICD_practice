@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fullstack
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/tuu-ngo/CICD_practice.git
+    targetRevision: main
+    path: gitops/k8s-fullstack
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fullstack
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true

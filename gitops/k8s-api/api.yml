@@ -35,13 +35,18 @@ spec:
           periodSeconds: 5
   strategy:
     canary:
+      analysis:
+        templates:
+        - templateName: success-rate   # ← dùng AnalysisTemplate trên
+        startingStep: 1                # bắt đầu chấm từ bước 1
       steps:
-      - setWeight: 25          # bước 1: 25% traffic sang bản mới
-      - pause: {}              # dừng vô hạn, chờ người promote
-      - setWeight: 50          # bước 2: 50%
+      - setWeight: 25
       - pause:
-          duration: 30s        # tự động sau 30 giây
-      - setWeight: 100         # bước 3: full 100%
+          duration: 2m                 # đợi 2 phút (đủ data cho analysis)
+      - setWeight: 50
+      - pause:
+          duration: 2m
+      - setWeight: 100
 
 ---
 
